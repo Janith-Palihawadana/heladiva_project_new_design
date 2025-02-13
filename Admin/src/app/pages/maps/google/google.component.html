@@ -1,0 +1,50 @@
+<!-- start page title -->
+<app-pagetitle title="Google Maps" [breadcrumbItems]="breadCrumbItems"></app-pagetitle>
+<!-- end page title -->
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Basic</h4>
+                <p class="card-title-desc">Example of google maps.</p>
+            </div>
+            <div class="card-body">
+                <agm-map [latitude]="latitude" [longitude]="longitude" style="height: 300px">
+                </agm-map>
+            </div>
+        </div>
+    </div> <!-- end col -->
+
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Markers</h4>
+                <p class="card-title-desc">Example of google maps.</p>
+            </div>
+            <div class="card-body">
+                <agm-map [latitude]="latitude" [longitude]="longitude" style="height: 300px">
+                    <agm-marker [latitude]="latitude" [longitude]="longitude"></agm-marker>
+                </agm-map>
+            </div>
+        </div>
+    </div> <!-- end col -->
+</div> <!-- end row -->
+
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title">Location</h4>
+                <p class="card-title-desc">Example of google maps.</p>
+            </div>
+            <div class="card-body">
+                <agm-map [latitude]="latitude" [longitude]="longitude" style="height: 300px">
+                    <agm-circle [latitude]="latitude" [longitude]="longitude" [radius]="9000" [fillColor]="'red'"
+                        [circleDraggable]="true" [editable]="true">
+                    </agm-circle>
+                </agm-map>
+            </div>
+        </div>
+    </div> <!-- end col -->
+</div> <!-- end row -->

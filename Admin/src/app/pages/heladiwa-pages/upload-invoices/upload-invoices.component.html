@@ -1,0 +1,226 @@
+<div class="mb-4">
+  <h5>Invoice</h5>
+</div>
+
+<form [formGroup]="filterForm" (ngSubmit)="_fetchData()">
+  <div class="row">
+    <div class="col-xl-2 col-md-2">
+      <input type="text" placeholder="Keyword" class="form-control form-control-sm" maxlength="100"
+             formControlName="keyword">
+    </div>
+    <div class="col-xl-2 col-md-2 mt-2 mt-xl-0">
+      <div class="ng-custom">
+        <ng-select placeholder="Select status" formControlName="is_active" [clearable]="false">
+          <ng-option [value]=true>Active</ng-option>
+          <ng-option [value]=false>Inactive</ng-option>
+        </ng-select>
+      </div>
+    </div>
+    <div class="col-xl-8 col-md-8 mt-2 mt-xl-0 d-inline-flex justify-content-between">
+      <div>
+        <button type="submit" class="btn btn-sm btn-primary px-2 px-md-4 me-1">Search</button>
+        <button type="button" class="btn btn-sm btn-primary px-2 px-md-4 ms-1" (click)="filterReset()">Reset</button>
+      </div>
+      <div>
+        <button type="button" class="btn btn-sm btn-primary px-2 px-md-4" (click)="openModal(addModal)">Add New Invoice
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="table-responsive mt-4">
+  <table class="table table-bordered table-sm table-hover">
+    <thead class="bg-soft-light">
+    <tr>
+      <th scope="col" class="w-auto">Invoice No</th>
+      <th scope="col" class="text-center action-width">Shop Name</th>
+      <th scope="col" class="text-center action-width">Amount</th>
+      <th scope="col" class="w-auto text-center">Date</th>
+      <th scope="col" class="text-center action-width">Status</th>
+      <th scope="col" class="text-center action-width">Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let row of tableData;">
+      <td>{{ row.invoice_no }}</td>
+      <td>{{ row.shop_name }}</td>
+      <td>{{ row.amount }}</td>
+      <td>{{ row.date }}</td>
+      <td class="text-center">
+        <span class="badge bg-success py-1 px-3" *ngIf="row.is_active">Active</span>
+        <span class="badge bg-danger py-1 px-3" *ngIf="!row.is_active">Inactive</span>
+      </td>
+      <td class="text-center action">
+        <div class="d-none d-lg-block">
+          <i class="fas fa-edit cursor-pointer" ngbTooltip="Edit" (click)="editRow(EditModal,row)"></i>
+          <i class="fas fa-trash cursor-pointer ms-2" ngbTooltip="Delete" (click)="deleteRow(row)"></i>
+        </div>
+      </td>
+    </tr>
+    <tr *ngIf="tableData <= 0">
+      <td colspan="18" class="fs-7">No records found</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="row mt-4">
+  <div class="col-12 col-sm-6">
+    <span class="fs-12">Show: </span>
+    <select [(ngModel)]="pageSize" (change)="_fetchData()">
+      <option value="10">10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="200">200</option>
+    </select>
+    <span class="fs-12 ms-3">Entries : {{ totalRecords }}</span>
+  </div>
+  <div class="col-12 col-sm-6 mt-3 mt-sm-0 d-flex justify-content-end pagination-rounded">
+    <ngb-pagination (pageChange)="onPageChange($event)" [collectionSize]="totalRecords" [(page)]="page"
+                    [pageSize]="pageSize" [size]="'sm'"
+                    [maxSize]="5" [rotate]="true" [boundaryLinks]="false" class="pagination"></ngb-pagination>
+  </div>
+</div>
+
+<ng-template #addModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Add Invoice</h5>
+    <button type="button" class="btn-close" aria-hidden="true"
+            (click)="modal.dismiss('Cross click'); closeModel();"></button>
+  </div>
+  <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
+    <div class="col mt-4 px-3">
+      <div class="mb-3">
+        <label>Route Name</label>
+        <div class="ng-custom">
+          <ng-select [items]="route_list" [multiple]="false" [closeOnSelect]="true" [hideSelected]="true" [clearable]="false"
+                     bindLabel="route_name" placeholder="Select shop" formControlName="route_id" [ngClass]="{ 'is-invalid': submitted && f.route_id.errors }">
+          </ng-select>
+        </div>
+        <div *ngIf="submitted && f.route_id.errors" class="invalid-feedback">
+          <span *ngIf="f.route_id.errors.required">Route is required</span>
+        </div>
+      </div>
+
+<!--      <div class="mb-3">-->
+<!--        <label>Upload File</label>-->
+<!--        <app-custom-dropzone (filePass)="uploadInvoice($event)"-->
+<!--                             accept="application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" [multiple]="false"></app-custom-dropzone>-->
+<!--        <app-dropzone-preview [previewType]="2" [items]="invoicePreview" (removeItemEvent)="resetUploadInvoicePreview($event)"></app-dropzone-preview>-->
+<!--      </div>-->
+
+      <div class="mb-3">
+        <label class="form-label">Status</label>
+        <div class="ng-custom">
+          <ng-select placeholder="Select status" formControlName="is_active" [clearable]="false"
+                     [ngClass]="{ 'is-invalid': submitted && f.is_active.errors }">
+            <ng-option [value]=true>Active</ng-option>
+            <ng-option [value]=false>Inactive</ng-option>
+          </ng-select>
+          <div *ngIf="submitted && f.is_active.errors" class="invalid-feedback">
+            <span *ngIf="f.is_active.errors.required">Status is required</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn-sm btn-primary">Save</button>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="modal.close('by: close button'); closeModel();">Close</button>
+    </div>
+  </form>
+</ng-template>
+
+
+<ng-template #EditModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title">Edit Invoice</h5>
+    <button type="button" class="btn-close" aria-hidden="true"
+            (click)="modal.dismiss('Cross click'); closeModel();"></button>
+  </div>
+  <form [formGroup]="editForm" (ngSubmit)="onEditSubmit()">
+    <div class="col mt-4 px-3">
+      <div class="mb-3">
+        <label>Invoice No</label>
+        <div>
+          <input placeholder="Enter amount" class="form-control form-control-sm" maxlength="15"
+                 formControlName="invoice_no" [ngClass]="{ 'is-invalid': submitted && f1.invoice_no.errors }">
+          <div *ngIf="submitted && f1.invoice_no.errors" class="invalid-feedback">
+            <span *ngIf="f1.invoice_no.errors.required">Invoice No is required</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label>Shop Name</label>
+        <div class="ng-custom">
+          <ng-select [items]="shop_list" [multiple]="false" [closeOnSelect]="true" [clearable]="false"
+                     bindLabel="shop_name" placeholder="Select shop" formControlName="shop_id"  bindValue="id" [ngClass]="{ 'is-invalid': submitted && f1.shop_id.errors }">
+          </ng-select>
+        </div>
+        <div *ngIf="submitted && f1.shop_id.errors" class="invalid-feedback">
+          <span *ngIf="f1.shop_id.errors.required">Shop is required</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label>Route</label>
+        <div class="ng-custom">
+          <ng-select [items]="route_list" [multiple]="false" [closeOnSelect]="true" [clearable]="false"
+                     bindLabel="route_name" placeholder="Select Route" formControlName="route_id"  bindValue="id" [ngClass]="{ 'is-invalid': submitted && f1.route_id.errors }">
+          </ng-select>
+        </div>
+        <div *ngIf="submitted && f1.route_id.errors" class="invalid-feedback">
+          <span *ngIf="f1.route_id.errors.required">Route is required</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label>Amount</label>
+        <div>
+          <input type="number" placeholder="Enter amount" class="form-control form-control-sm" maxlength="15"
+                 formControlName="amount" [ngClass]="{ 'is-invalid': submitted && f1.amount.errors }">
+        </div>
+        <div *ngIf="submitted && f1.amount.errors" class="invalid-feedback">
+          <span *ngIf="f1.amount.errors.required">Amount is required</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label>Date</label>
+        <div>
+          <input class="form-control" type="date" value="2019-08-19" id="example-date-input" formControlName="date">
+        </div>
+        <div *ngIf="submitted && f1.date.errors" class="invalid-feedback">
+          <span *ngIf="f1.date.errors.required">Date is required</span>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label>Remark</label>
+        <div>
+          <input placeholder="Enter Remark" class="form-control form-control-sm"
+                 formControlName="remark">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Status</label>
+        <div class="ng-custom">
+          <ng-select placeholder="Select status" formControlName="is_active" [clearable]="false"
+                     [ngClass]="{ 'is-invalid': submitted && f1.is_active.errors }">
+            <ng-option [value]=true>Active</ng-option>
+            <ng-option [value]=false>Inactive</ng-option>
+          </ng-select>
+          <div *ngIf="submitted && f1.is_active.errors" class="invalid-feedback">
+            <span *ngIf="f1.is_active.errors.required">Status is required</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn-sm btn-primary">Save</button>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="modal.close('by: close button'); closeModel();">Close</button>
+    </div>
+  </form>
+</ng-template>

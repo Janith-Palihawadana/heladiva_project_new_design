@@ -1,0 +1,184 @@
+<div class="mb-4">
+  <h5>System Users</h5>
+</div>
+
+<form [formGroup]="filterForm" (ngSubmit)="_fetchData()">
+  <div class="row">
+    <div class="col-xl-2 col-md-2">
+      <input type="text" placeholder="Keyword" class="form-control form-control-sm" maxlength="100"
+             formControlName="keyword">
+    </div>
+    <div class="col-xl-2 col-md-2 mt-2 mt-xl-0">
+      <div class="ng-custom">
+        <ng-select placeholder="Select status" formControlName="is_active" [clearable]="false">
+          <ng-option [value]=true>Active</ng-option>
+          <ng-option [value]=false>Inactive</ng-option>
+        </ng-select>
+      </div>
+    </div>
+    <div class="col-xl-8 col-md-8 mt-2 mt-xl-0 d-inline-flex justify-content-between">
+      <div>
+        <button type="submit" class="btn btn-sm btn-primary px-2 px-md-4 me-1">Search</button>
+        <button type="button" class="btn btn-sm btn-primary px-2 px-md-4 ms-1" (click)="filterReset()">Reset</button>
+      </div>
+      <div>
+        <button type="button" class="btn btn-sm btn-primary px-2 px-md-4" (click)="openModal(addEditModal)">Add New Users
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="table-responsive mt-4">
+  <table class="table table-bordered table-sm table-hover">
+    <thead class="bg-soft-light">
+    <tr>
+      <th scope="col" class="w-auto">Full name</th>
+      <th scope="col" class="w-auto">email</th>
+      <th scope="col" class="w-auto">phone_number</th>
+      <th scope="col" class="w-auto text-center">Status</th>
+      <th scope="col" class="text-center action-width">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let row of tableData;">
+      <td>{{ row.full_name }}</td>
+      <td>{{ row.email }}</td>
+      <td>{{ row.phone_number }}</td>
+      <td class="text-center">
+        <span class="badge bg-success py-1 px-3" *ngIf="row.is_active">Active</span>
+        <span class="badge bg-danger py-1 px-3" *ngIf="!row.is_active">Inactive</span>
+      </td>
+      <td class="text-center action">
+        <div class="d-none d-lg-block">
+          <i class="fas fa-edit cursor-pointer" ngbTooltip="Edit" (click)="editRow(addEditModal,row)"></i>
+          <i class="fas fa-trash cursor-pointer ms-2" ngbTooltip="Delete" (click)="deleteRow(row)"></i>
+        </div>
+      </td>
+    </tr>
+    <tr *ngIf="tableData <= 0">
+      <td colspan="18" class="fs-7">No records found</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="row mt-4">
+  <div class="col-12 col-sm-6">
+    <span class="fs-12">Show: </span>
+    <select [(ngModel)]="pageSize" (change)="_fetchData()">
+      <option value="10">10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="200">200</option>
+    </select>
+    <span class="fs-12 ms-3">Entries : {{ totalRecords }}</span>
+  </div>
+  <div class="col-12 col-sm-6 mt-3 mt-sm-0 d-flex justify-content-end pagination-rounded">
+    <ngb-pagination (pageChange)="onPageChange($event)" [collectionSize]="totalRecords" [(page)]="page"
+                    [pageSize]="pageSize" [size]="'sm'"
+                    [maxSize]="5" [rotate]="true" [boundaryLinks]="false" class="pagination"></ngb-pagination>
+  </div>
+</div>
+
+<ng-template #addEditModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" *ngIf="!isEdit">Add New User</h5>
+    <h5 class="modal-title" *ngIf="isEdit">Edit User</h5>
+    <button type="button" class="btn-close" aria-hidden="true"
+            (click)="modal.dismiss('Cross click'); closeModel();"></button>
+  </div>
+  <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
+    <div class="col mt-4 px-3">
+      <div class="mb-3">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-control form-control-sm" id="full_name" formControlName="full_name"
+               placeholder="Enter Full Name"
+               [ngClass]="{ 'is-invalid': ( submitted && f.full_name.errors ) || ( f.full_name.dirty && f.full_name.errors ) }">
+        <div *ngIf="submitted || f.full_name.dirty" class="invalid-feedback">
+          <div *ngIf="f.full_name.errors?.required">Full Name is required</div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="text" class="form-control form-control-sm" id="email" formControlName="email"
+               placeholder="Enter email"
+               [ngClass]="{ 'is-invalid': ( submitted && f.email.errors ) || ( f.email.dirty && f.email.errors ) }">
+        <div *ngIf="submitted || f.email.dirty" class="invalid-feedback">
+          <div *ngIf="f.email.errors?.required">Email is required</div>
+          <div *ngIf="f.email.errors?.email">Email is not valid</div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label>Role</label>
+        <div class="ng-custom">
+          <ng-select [items]="userRoles" [multiple]="false" [closeOnSelect]="true" [hideSelected]="true" [clearable]="false"
+                     bindLabel="role_name" bindValue="id" placeholder="Select a role" formControlName="role_id" [ngClass]="{ 'is-invalid': submitted && f.role_id.errors }">
+          </ng-select>
+        </div>
+        <div *ngIf="submitted && f.role_id.errors" class="invalid-feedback">
+          <span *ngIf="f.role_id.errors.required">Role is required</span>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="phone_number" class="form-label">User Status</label>
+        <div class="ng-custom">
+          <ng-select placeholder="Select status" formControlName="is_active" [clearable]="false">
+            <ng-option [value]=true>Active</ng-option>
+            <ng-option [value]=false>Inactive</ng-option>
+          </ng-select>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label for="phone_number" class="form-label">Phone Number</label>
+        <input type="text" class="form-control form-control-sm" id="phone_number"
+               formControlName="phone_number"
+               placeholder="Enter phone number"
+               [ngClass]="{ 'is-invalid': submitted && f.phone_number.errors }" [maxlength]="12">
+        <div *ngIf="submitted && f.phone_number.errors" class="invalid-feedback">
+          <span *ngIf="f.phone_number.errors.required">Phone Number is required</span>
+          <span *ngIf="f.phone_number.errors.pattern || f.phone_number.errors.minlength">Phone number is not valid (ex:+94xxxxxxxxx)</span>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label>Password</label>
+        <div class="input-group input-group-sm" [ngClass]="{ 'is-invalid': ( submitted && f.password.errors ) || ( f.password.dirty && f.password.errors ) }">
+          <input [type]="fieldTextType ? 'text' : 'password'" class="form-control"
+                 [ngClass]="{ 'is-invalid': (submitted && f.password.errors) || ( f.password.dirty && f.password.errors ) }"
+                 formControlName="password"
+                 placeholder="Enter password" maxlength="20" readonly onfocus="this.removeAttribute('readonly')" >
+          <span class="input-group-text cursor-pointer">
+                          <i class="mdi" [ngClass]=" fieldTextType ? 'mdi-eye-outline' : 'mdi-eye-off-outline' "
+                             (click)="toggleFieldTextType()">
+                          </i>
+                      </span>
+          <div *ngIf="submitted || f.password.dirty" class="invalid-feedback">
+            <span *ngIf="f.password.errors?.pattern">Use 8+ characters, mix letters, numbers, symbols</span>
+          </div>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label>Confirm Password</label>
+        <div class="input-group input-group-sm" [ngClass]="{ 'is-invalid': ( submitted && f.confirm_password.errors ) || ( addForm.hasError('passwordMismatch') && f.confirm_password.dirty ) }" >
+          <input [type]="fieldTextType ? 'text' : 'password'" class="form-control"
+                 [ngClass]="{ 'is-invalid': ( submitted && f.confirm_password.errors )|| ( addForm.hasError('passwordMismatch') && f.confirm_password.dirty ) }"
+                 formControlName="confirm_password"
+                 placeholder="Enter password" maxlength="20" readonly onfocus="this.removeAttribute('readonly')">
+          <span class="input-group-text cursor-pointer">
+                          <i class="mdi" [ngClass]=" fieldTextType ? 'mdi-eye-outline' : 'mdi-eye-off-outline' "
+                             (click)="toggleFieldTextType()">
+                          </i>
+                      </span>
+          <div *ngIf="submitted || addForm.hasError('passwordMismatch') && f.confirm_password.dirty " class="invalid-feedback">
+            <span>Password confirmation does not match</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn-sm btn-primary">Save</button>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="modal.close('by: close button'); closeModel();">Close</button>
+    </div>
+  </form>
+</ng-template>
+

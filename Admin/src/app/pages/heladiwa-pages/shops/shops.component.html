@@ -1,0 +1,139 @@
+<div class="mb-4">
+  <h5>Shops</h5>
+</div>
+
+<form [formGroup]="filterForm" (ngSubmit)="_fetchData()">
+  <div class="row">
+    <div class="col-xl-2 col-md-2">
+      <input type="text" placeholder="Keyword" class="form-control form-control-sm" maxlength="100"
+             formControlName="keyword">
+    </div>
+    <div class="col-xl-2 col-md-2 mt-2 mt-xl-0">
+      <div class="ng-custom">
+        <ng-select placeholder="Select status" formControlName="is_active" [clearable]="false">
+          <ng-option [value]=true>Active</ng-option>
+          <ng-option [value]=false>Inactive</ng-option>
+        </ng-select>
+      </div>
+    </div>
+    <div class="col-xl-8 col-md-8 mt-2 mt-xl-0 d-inline-flex justify-content-between">
+      <div>
+        <button type="submit" class="btn btn-sm btn-primary px-2 px-md-4 me-1">Search</button>
+        <button type="button" class="btn btn-sm btn-primary px-2 px-md-4 ms-1" (click)="filterReset()">Reset</button>
+      </div>
+      <div>
+        <button type="button" class="btn btn-sm btn-primary px-2 px-md-4" (click)="openModal(addEditModal)">Add New Shop
+        </button>
+      </div>
+    </div>
+  </div>
+</form>
+
+<div class="table-responsive mt-4">
+  <table class="table table-bordered table-sm table-hover">
+    <thead class="bg-soft-light">
+    <tr>
+      <th scope="col" class="w-auto">Name</th>
+      <th scope="col" class="w-auto text-center">Status</th>
+      <th scope="col" class="text-center action-width">Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let row of tableData;">
+      <td>{{ row.shop_name }}</td>
+      <td class="text-center">
+        <span class="badge bg-success py-1 px-3" *ngIf="row.is_active">Active</span>
+        <span class="badge bg-danger py-1 px-3" *ngIf="!row.is_active">Inactive</span>
+      </td>
+      <td class="text-center action">
+        <div class="d-none d-lg-block">
+          <i class="fas fa-edit cursor-pointer" ngbTooltip="Edit" (click)="editRow(addEditModal,row)"></i>
+          <i class="fas fa-trash cursor-pointer ms-2" ngbTooltip="Delete" (click)="deleteRow(row)"></i>
+        </div>
+      </td>
+    </tr>
+    <tr *ngIf="tableData <= 0">
+      <td colspan="18" class="fs-7">No records found</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<div class="row mt-4">
+  <div class="col-12 col-sm-6">
+    <span class="fs-12">Show: </span>
+    <select [(ngModel)]="pageSize" (change)="_fetchData()">
+      <option value="10">10</option>
+      <option value="20">20</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+      <option value="200">200</option>
+    </select>
+    <span class="fs-12 ms-3">Entries : {{ totalRecords }}</span>
+  </div>
+  <div class="col-12 col-sm-6 mt-3 mt-sm-0 d-flex justify-content-end pagination-rounded">
+    <ngb-pagination (pageChange)="onPageChange($event)" [collectionSize]="totalRecords" [(page)]="page"
+                    [pageSize]="pageSize" [size]="'sm'"
+                    [maxSize]="5" [rotate]="true" [boundaryLinks]="false" class="pagination"></ngb-pagination>
+  </div>
+</div>
+
+
+<ng-template #addEditModal let-modal>
+  <div class="modal-header">
+    <h5 class="modal-title" *ngIf="!isEdit">Add New Shop</h5>
+    <h5 class="modal-title" *ngIf="isEdit">Edit Shop</h5>
+    <button type="button" class="btn-close" aria-hidden="true"
+            (click)="modal.dismiss('Cross click'); closeModel();"></button>
+  </div>
+  <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
+    <div class="col mt-4 px-3">
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        <textarea row="2" class="form-control form-control-sm" id="shop_name" formControlName="shop_name"
+                  placeholder="Enter Area Name"
+                  [ngClass]="{ 'is-invalid': submitted && f.shop_name.errors }"></textarea>
+        <div *ngIf="submitted && f.shop_name.errors" class="invalid-feedback">
+          <span *ngIf="f.shop_name.errors.required">Shop Name is required</span>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label>Due date count</label>
+        <div>
+          <input type="number" placeholder="due date count" class="form-control form-control-sm" maxlength="15"
+                 formControlName="due_date_count" [ngClass]="{ 'is-invalid': submitted && f.due_date_count.errors }">
+        </div>
+        <div *ngIf="submitted && f.due_date_count.errors" class="invalid-feedback">
+          <span *ngIf="f.due_date_count.errors.required">Due date count is required</span>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label>Select routes</label>
+        <div class="ng-custom">
+          <ng-select [items]="route_list" [multiple]="true" [closeOnSelect]="false" [hideSelected]="true" [clearable]="false"
+                     bindLabel="route_name" placeholder="Select Route" formControlName="route_id" [ngClass]="{ 'is-invalid': submitted && f.route_id.errors }">
+          </ng-select>
+        </div>
+        <div *ngIf="submitted && f.route_id.errors" class="invalid-feedback">
+          <span *ngIf="f.route_id.errors.required">Routes is required</span>
+        </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Status</label>
+        <div class="ng-custom">
+          <ng-select placeholder="Select status" formControlName="is_active" [clearable]="false"
+                     [ngClass]="{ 'is-invalid': submitted && f.is_active.errors }">
+            <ng-option [value]=true>Active</ng-option>
+            <ng-option [value]=false>Inactive</ng-option>
+          </ng-select>
+          <div *ngIf="submitted && f.is_active.errors" class="invalid-feedback">
+            <span *ngIf="f.is_active.errors.required">Status is required</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn-sm btn-primary">Save</button>
+      <button type="button" class="btn btn-sm btn-secondary" (click)="modal.close('by: close button'); closeModel();">Close</button>
+    </div>
+  </form>
+</ng-template>
